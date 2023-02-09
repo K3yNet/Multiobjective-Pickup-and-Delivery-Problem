@@ -213,14 +213,41 @@ bool verificaRestricao(Pontos *totalPontos, Instancia inst,Truck caminhao){
     return true; // caso passe por todas as restrições retorna verdadeiro
 }
 
-int quantidadeTrucks(Pontos *totalPontos, int **MA, Instancia inst, Truck caminhao){
-    int demandaTotal = 0;
-
-    for (int i = 0; i < (inst.tamanho_instancia / 2) + 1; i++)
-        demandaTotal += totalPontos[i].demanda;
-
-    return demandaTotal/inst.capacidade_veiculo;
-
+int partition(Pontos *ordenados, int low, int high)
+{
+    int pivot = ordenados[high].menorTempo;
+    int i = (low- 1); 
+    for (int j = low; j <= high - 1; j++) {
+        if (ordenados[j].menorTempo < pivot) {
+            i++;
+            swap(ordenados[i], ordenados[j]);
+        }
+    }
+    swap(ordenados[i + 1], ordenados[high]);
+    return (i + 1);
 }
+
+void quickSort(Pontos *ordenados, int low, int high)
+{
+    if (low < high) {
+        int pi = partition(ordenados, low, high);
+ 
+        quickSort(ordenados, low, pi - 1);
+        quickSort(ordenados, pi + 1, high);
+    }
+}
+
+
+void ordenaJanelaDeTempo(Pontos *totalPontos, Pontos *ordenados,Instancia inst){
+    int cont = 0;
+    for(int i = 0; i < inst.tamanho_instancia; i++){
+        if(totalPontos[i].pEntrega == 0 and totalPontos[i].id != 0){
+            ordenados[cont] = totalPontos[i];
+            cont++;
+        }
+    }
+    quickSort(ordenados, 0, inst.tamanho_instancia /2 -1);
+}
+
 
 #endif
