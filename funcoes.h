@@ -225,6 +225,7 @@ int sequentialInsertion(Pontos *totalPontos,Instancia inst, vector <Truck> &cami
         Truck novoCaminhao;
         caminhoes.push_back(novoCaminhao);
         while(!coletas.empty()){
+            /*Adicionar a heuristica de inserção aqui*/
             if(verificaRestricao(totalPontos,inst,novoCaminhao)){
                 for(int i = 0; i < novoCaminhao.sequencia.size();i++){
                     if(novoCaminhao.sequencia[i].id != 0)
