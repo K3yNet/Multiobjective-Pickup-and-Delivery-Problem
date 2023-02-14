@@ -47,9 +47,9 @@ int custo_total(const vector<int> &ciclo) {
 vector<pair<int, int>> pega_pares(vector<int> lista){
     vector<pair<int, int>> pares;
     for (int i = 0; i < lista.size() - 1; i++) {
-        pares.push_back(make_pair(ciclo_inicial[i], ciclo_inicial[i + 1]));
+        pares.push_back(make_pair(lista[i], lista[i + 1]));
     }
-    pares.push_back(make_pair(ciclo_inicial[lista.size() - 1], ciclo_inicial[0]));
+    pares.push_back(make_pair(lista[lista.size() - 1], lista[0]));
     
     return pares;
 
@@ -78,25 +78,32 @@ vector<int> mais_proximo(vector<int> ciclo_inicial) {
         cout << "Vertice mais distante: " << vertice << endl;
 
         vector<pair<int, int>> pares = pega_pares(ciclo_inicial);
-        vector<int> novo_ciclo;
+        vector<int> novo_ciclo = {};
+        // for (int i = 0; i < pares.size(); i++)
+        // {
+        //     cout << "[" << pares[i].first << ", " << pares[i].second << "]" << endl;
+        // }
 
         for (pair<int, int> aresta : pares) {
             int novo_custo = matriz[vertice][aresta.first] + matriz[vertice][aresta.second] - matriz[aresta.first][aresta.second];
-            cout << "Novo custo = " << novo_custo << endl;
-            cout << "Matriz 1 = " << matriz[vertice][aresta.first] << endl;
-            cout << "Matriz 2 = " << matriz[vertice][aresta.second] << endl;
-            cout << "Matriz 3 = " << matriz[aresta.first][aresta.second] << endl;
             if (novo_custo < custo) {
                 novo_ciclo = ciclo_inicial;
+                for (int i = 0; i < novo_ciclo.size(); i++)
+                {
+                    cout << novo_ciclo[i] << " ";
+                }
+                cout << endl;
                 custo = novo_custo;
                 cout << "Custo = " << custo << endl;
-                novo_ciclo.insert(novo_ciclo.begin() + (aresta.first + 1), vertice);
+                auto it = find(novo_ciclo.begin(), novo_ciclo.end(), aresta.first);
+                novo_ciclo.insert((novo_ciclo.begin() + int(it - novo_ciclo.begin() + 1)), vertice);
+                for (int i = 0; i < novo_ciclo.size(); i++)
+                {
+                    cout << novo_ciclo[i] << " ";
+                }
+                cout << endl;
             }
-            // for (int i = 0; i < novo_ciclo.size(); i++)
-            // {
-            //     cout << novo_ciclo[i] << " ";
-            // }
-            // cout << endl;
+            
         }
         
         ciclo_inicial = vector<int>(novo_ciclo);
