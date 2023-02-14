@@ -33,17 +33,6 @@ std::vector<std::vector<int>> matriz_arquivo() {
 
 std::vector<std::vector<int>> matriz = matriz_arquivo();
 
-int custo_total(const vector<int> &ciclo) {
-    int custo = 0;
-    int vertice_atual, proximo_vertice;
-    for (int i = 0; i < ciclo.size() - 1; i++) {
-        vertice_atual = ciclo[i];
-        proximo_vertice = ciclo[i + 1];
-        custo += matriz[vertice_atual][proximo_vertice];
-    }
-    return custo;
-}
-
 vector<pair<int, int>> pega_pares(vector<int> lista){
     vector<pair<int, int>> pares;
     for (int i = 0; i < lista.size() - 1; i++) {
@@ -52,7 +41,21 @@ vector<pair<int, int>> pega_pares(vector<int> lista){
     pares.push_back(make_pair(lista[lista.size() - 1], lista[0]));
     
     return pares;
+}
 
+int custo_total(const vector<int> &ciclo) {
+    int custo = 0;
+    vector<pair<int, int>>pares = pega_pares(ciclo);
+    for (int i = 0; i < pares.size() - 1; i++)
+    {
+        int a = pares[i].first;
+        int b = pares[i].second;
+        custo = matriz[a][b] + custo;
+        cout << "custo = +" << matriz[a][b] << " - " << custo << endl;
+    }
+    cout << endl;
+
+    return custo;
 }
 
 vector<int> mais_proximo(vector<int> ciclo_inicial) {
@@ -79,43 +82,31 @@ vector<int> mais_proximo(vector<int> ciclo_inicial) {
 
         vector<pair<int, int>> pares = pega_pares(ciclo_inicial);
         vector<int> novo_ciclo = {};
-        // for (int i = 0; i < pares.size(); i++)
-        // {
-        //     cout << "[" << pares[i].first << ", " << pares[i].second << "]" << endl;
-        // }
 
         for (pair<int, int> aresta : pares) {
             int novo_custo = matriz[vertice][aresta.first] + matriz[vertice][aresta.second] - matriz[aresta.first][aresta.second];
             if (novo_custo < custo) {
                 novo_ciclo = ciclo_inicial;
-                for (int i = 0; i < novo_ciclo.size(); i++)
-                {
-                    cout << novo_ciclo[i] << " ";
-                }
-                cout << endl;
                 custo = novo_custo;
-                cout << "Custo = " << custo << endl;
                 auto it = find(novo_ciclo.begin(), novo_ciclo.end(), aresta.first);
                 novo_ciclo.insert((novo_ciclo.begin() + int(it - novo_ciclo.begin() + 1)), vertice);
-                for (int i = 0; i < novo_ciclo.size(); i++)
-                {
-                    cout << novo_ciclo[i] << " ";
-                }
-                cout << endl;
             }
             
         }
         
         ciclo_inicial = vector<int>(novo_ciclo);
 
-        for (int i = 0; i < ciclo_inicial.size(); i++){
-            cout << ciclo_inicial[i] << " ";
-        }
-        cout << endl;
 
     }
 
     ciclo_inicial.push_back(0);
+
+    for (int i = 0; i < ciclo_inicial.size(); i++)
+    {
+        cout << ciclo_inicial[i] << " ";
+    }
+    cout << endl;
+    
 
     return ciclo_inicial;
 
