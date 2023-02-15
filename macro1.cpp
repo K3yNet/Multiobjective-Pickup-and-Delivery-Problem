@@ -36,7 +36,17 @@ int main(){
     caminhao.rota.push_back(instancia.tamanho_instancia - 1);
     vector<Truck> caminhoes;
     caminhoes.push_back(caminhao);
+    
+    Pontos *coletas = new Pontos[(instancia.tamanho_instancia -1 )/2];
+    for(int i = 0; i < (instancia.tamanho_instancia -1 )/2; i++)
+        coletas[i] = totalPontos[i];
 
+    quickSort(coletas,0,(instancia.tamanho_instancia-1)/2);
+
+    for(int i = 0; i < (instancia.tamanho_instancia -1 )/2;i++)
+        cout << coletas[i].id << " ";
+
+    
     mais_proximo(caminhoes[0].rota, MA, instancia, totalPontos, caminhoes);
 
     return 0;
