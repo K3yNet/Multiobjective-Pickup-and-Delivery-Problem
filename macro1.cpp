@@ -15,15 +15,11 @@ Rafael Brunini : 202120488
 
 using namespace std;
 
-
 int main(){
 
     Truck caminhao;
 
-    string posicaoAtualArquivo;
-
-    cout << "insira a instancia q deseja testar: "; 
-    cin >> posicaoAtualArquivo;
+    string posicaoAtualArquivo = "nyc-n200-3.txt";
 
     Instancia instancia;
 
@@ -31,33 +27,11 @@ int main(){
 
     Pontos *totalPontos = new Pontos[instancia.tamanho_instancia];
     int **MA = new int*[instancia.tamanho_instancia];
-    
-    leituraGrafo(posicaoAtualArquivo,instancia.tamanho_instancia,MA,totalPontos);
-    /*
-    caminhao.sequencia.push_back(totalPontos[0]);
-    caminhao.tempoGasto += MA[0][4];
-    caminhao.sequencia.push_back(totalPontos[4]); //coleta
-    caminhao.ocupacao +=totalPontos[4].demanda;
-    caminhao.tempoGasto += MA[4][11] + 5;
-    caminhao.sequencia.push_back(totalPontos[11]); // coleta
-    caminhao.ocupacao += totalPontos[11].demanda;
-    caminhao.tempoGasto += MA[11][61] + 5;
-    caminhao.sequencia.push_back(totalPontos[61]); //entrega
-    caminhao.ocupacao += totalPontos[61].demanda;
-    caminhao.tempoGasto += MA[61][51] + 5;
-    caminhao.sequencia.push_back(totalPontos[54]); //entrega
-    caminhao.ocupacao += totalPontos[54].demanda;
-    caminhao.tempoGasto += MA[54][0] + 5;
-    caminhao.sequencia.push_back(totalPontos[0]);
 
-    cout << verificaRestricao(totalPontos,instancia,caminhao);
-    */
-    Pontos *ordenados = new Pontos[(instancia.tamanho_instancia / 2) -1];
+    leituraGrafo(posicaoAtualArquivo, instancia.tamanho_instancia, MA, totalPontos);
+    vector<Truck> caminhoes;
 
-    ordenaJanelaDeTempo(totalPontos,ordenados,instancia);
-
-    for(int i = 0; i < instancia.tamanho_instancia/2 -1; i++)
-        cout << ordenados[i].id  << " " << ordenados[i].menorTempo  << ' ' << ordenados[i].tempoLimite << ' ' << MA[ordenados[i].id-1][0] <<endl;
+    sequentialInsertion(totalPontos, instancia, caminhoes, MA);
 
     return 0;
 }
