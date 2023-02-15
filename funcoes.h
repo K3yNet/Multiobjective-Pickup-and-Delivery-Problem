@@ -8,8 +8,12 @@
 #include <unistd.h>
 #include <cstdlib>
 #include <vector>
+#include <algorithm>
+#include <sstream>
 
 using namespace std;
+
+const int INF = 1000000;
 
 struct Instancia{
     int tamanho_instancia;
@@ -35,8 +39,90 @@ struct Truck{
     unsigned int id;
     int tempoGasto = 0;
     int ocupacao = 0;
-     vector <Pontos> sequencia;
+     vector <int> rota;
 };
+
+vector<pair<int, int>> pega_pares(vector<int> lista){
+    vector<pair<int, int>> pares;
+    for (int i = 0; i < lista.size() - 1; i++) {
+        pares.push_back(make_pair(lista[i], lista[i + 1]));
+    }
+    pares.push_back(make_pair(lista[lista.size() - 1], lista[0]));
+    
+    return pares;
+}
+
+int custo_total(const vector<int> &ciclo, int** MA) {
+    int custo = 0;
+    vector<pair<int, int>>pares = pega_pares(ciclo);
+    for (int i = 0; i < pares.size() - 1; i++)
+    {
+        int a = pares[i].first;
+        int b = pares[i].second;
+        custo = MA[a][b] + custo;
+        cout << "custo = +" << MA[a][b] << " - " << custo << endl;
+    }
+    cout << endl;
+
+    return custo;
+}
+
+vector<int> mais_proximo(vector<int> ciclo_inicial, int** MA, Instancia inst) {
+    
+
+
+    while (ciclo_inicial.size() < inst.tamanho_instancia) {
+        int distancia_vertice = INF;
+        int custo = INF;
+        int vertice = -1;
+
+        for (int linha = 0; linha < inst.tamanho_instancia; linha++) {
+            if (find(ciclo_inicial.begin(), ciclo_inicial.end(), linha) == ciclo_inicial.end()) {
+                for (int coluna = 0; coluna < inst.tamanho_instancia; coluna++) {
+                    if (find(ciclo_inicial.begin(), ciclo_inicial.end(), coluna) != ciclo_inicial.end()) {
+                        if (MA[linha][coluna] < distancia_vertice) {
+                            distancia_vertice = MA[linha][coluna];
+                            vertice = linha;
+                        }
+                    }
+                }
+            }
+        }
+
+        
+
+        cout << "Vertice mais distante: " << vertice << endl;
+
+        vector<pair<int, int>> pares = pega_pares(ciclo_inicial);
+        vector<int> novo_ciclo = {};
+
+        for (pair<int, int> aresta : pares) {
+            int novo_custo = MA[vertice][aresta.first] + MA[vertice][aresta.second] - MA[aresta.first][aresta.second];
+            if (novo_custo < custo) {
+                novo_ciclo = ciclo_inicial;
+                custo = novo_custo;
+                auto it = find(novo_ciclo.begin(), novo_ciclo.end(), aresta.first);
+                novo_ciclo.insert((novo_ciclo.begin() + int(it - novo_ciclo.begin() + 1)), vertice);
+            }
+            
+        }
+        
+        ciclo_inicial = vector<int>(novo_ciclo);
+
+    }
+
+    ciclo_inicial.push_back(0);
+
+    for (int i = 0; i < ciclo_inicial.size(); i++)
+    {
+        cout << ciclo_inicial[i] << " ";
+    }
+    cout << endl;
+    
+
+    return ciclo_inicial;
+
+}
 
 void LerInstancia(string namefile, Instancia &instancia){
     char delimitador = ' ';
@@ -140,7 +226,6 @@ void leituraGrafo(string nameFile,int tamanhoGrafo,int **MA,Pontos *totalPontos)
     }
 }
 
-
 bool verificaRestricao(Pontos *totalPontos, Instancia inst,Truck &caminhao){
     
     int visitaEntrega, visitaColeta;
@@ -150,11 +235,11 @@ bool verificaRestricao(Pontos *totalPontos, Instancia inst,Truck &caminhao){
     bool restrito = false;
 
     //precedencia de coleta
-    for(int i = 0; i < int(caminhao.sequencia.size()); i++){
+    for(int i = 0; i < int(caminhao.rota.size()); i++){
         restrito = false;
-        if(caminhao.sequencia[i].pColeta > 0){
+        if(totalPontos[caminhao.rota[i]].pColeta > 0){
             for(int j = 0; j < i ;j++){
-                if(caminhao.sequencia[j].id == caminhao.sequencia[i].pColeta)
+                if(totalPontos[caminhao.rota[j]].id == totalPontos[caminhao.rota[i]].pColeta)
                     restrito = true;
             }
             if(restrito == false)
@@ -164,8 +249,8 @@ bool verificaRestricao(Pontos *totalPontos, Instancia inst,Truck &caminhao){
     }
 
     //Janela de Tempo
-    for(int i = 0; i < int(caminhao.sequencia.size()); i++){
-        atual = caminhao.sequencia[i];
+    for(int i = 0; i < int(caminhao.rota.size()); i++){
+        atual = totalPontos[caminhao.rota[i]];
         if(caminhao.tempoGasto < atual.tempoAbertura)
             caminhao.tempoGasto += atual.tempoAbertura - caminhao.tempoGasto;
 
@@ -175,23 +260,23 @@ bool verificaRestricao(Pontos *totalPontos, Instancia inst,Truck &caminhao){
             
     }
     // Obrigatoriedade e Exclusividade de visita
-    for(int i = 0; i < int(caminhao.sequencia.size()); i++){
+    for(int i = 0; i < int(caminhao.rota.size()); i++){
         visitaEntrega = 0;
         visitaColeta = 0;
-        if(caminhao.sequencia[i].pColeta == 0 and caminhao.sequencia[i].id != 0){
-            coleta = caminhao.sequencia[i];
-            entrega = totalPontos[caminhao.sequencia[i].pEntrega-1];
+        if(totalPontos[caminhao.rota[i]].pColeta == 0 and totalPontos[caminhao.rota[i]].id != 0){
+            coleta = totalPontos[caminhao.rota[i]];
+            entrega = totalPontos[totalPontos[caminhao.rota[i]].pEntrega-1];
         }
-        else if(caminhao.sequencia[i].pEntrega == 0 and caminhao.sequencia[i].id != 0){
-            entrega = caminhao.sequencia[i];
-            coleta = totalPontos[caminhao.sequencia[i].pColeta-1];
+        else if(totalPontos[caminhao.rota[i]].pEntrega == 0 and totalPontos[caminhao.rota[i]].id != 0){
+            entrega = totalPontos[caminhao.rota[i]];
+            coleta = totalPontos[totalPontos[caminhao.rota[i]].pColeta-1];
         }
 
-        for(int j = 0; j < caminhao.sequencia.size();j++){
-            if(caminhao.sequencia[j].id == coleta.id)
+        for(int j = 0; j < caminhao.rota.size();j++){
+            if(totalPontos[caminhao.rota[j]].id == coleta.id)
                 visitaColeta++;
 
-            if(caminhao.sequencia[j].id == entrega.id)
+            if(totalPontos[caminhao.rota[j]].id == entrega.id)
                 visitaEntrega++;
         }
         if(visitaColeta > 1 or visitaEntrega > 1)
@@ -201,7 +286,7 @@ bool verificaRestricao(Pontos *totalPontos, Instancia inst,Truck &caminhao){
     }
 
     //Verifica inicio e fim e se não estoura o tempo de roterização
-    if(caminhao.sequencia[0].id != 0 or caminhao.sequencia[caminhao.sequencia.size()-1].id != 0 or caminhao.tempoGasto > inst.roterizacao)
+    if(caminhao.rota[0] != 0 or caminhao.rota[caminhao.rota.size()-1] != 0 or caminhao.tempoGasto > inst.roterizacao)
         return false;
         
     //Capacidade do veiculo
@@ -212,179 +297,33 @@ bool verificaRestricao(Pontos *totalPontos, Instancia inst,Truck &caminhao){
     return true; // caso passe por todas as restrições retorna verdadeiro
 }
 
-void geraCiclo(){
-
-}
-
-int sequentialInsertion(Pontos *totalPontos,Instancia inst, vector <Truck> &caminhoes){
-    vector <Pontos> coletas;
-    vector <Pontos> entregas;
-    int custoTotal;
-    for(int i = 0; i < inst.tamanho_instancia;i++)
-        if(totalPontos[i].pColeta == 0 and totalPontos[i].id != 0)
-            coletas.push_back(totalPontos[i]);
+int sequentialInsertion(Pontos *totalPontos, Instancia inst, vector <Truck> &caminhoes, int** MA){
     
-    for(int i = 0; i < inst.tamanho_instancia;i++)
-        if(totalPontos[i].pEntrega == 0 and totalPontos[i].id != 0)
-            coletas.push_back(totalPontos[i]);
-
-
-    Truck novoCaminhao;
-    while(true){
-        while(!coletas.empty()){
-            
-            if(verificaRestricao(totalPontos,inst,novoCaminhao)){
-                for(int i = 0; i < novoCaminhao.sequencia.size();i++){
-                    if(novoCaminhao.sequencia[i].id != 0)
-                        novoCaminhao.sequencia[i].visitado = 1;
-                    for(int j = 0; j < coletas.size();j++){
-                        if(novoCaminhao.sequencia[i].id == coletas[j].id)
-                            coletas.erase(coletas.begin()+j);
-                    }
-                }
-            }
-            else
-                caminhoes.push_back(novoCaminhao);
-        }
-        if(coletas.empty())
-            return custoTotal;
-    }
-}
-
-
-#include <iostream>
-#include <vector>
-#include <fstream>
-#include <cmath>
-#include <algorithm>
-#include <utility>
-#include <sstream>
-using namespace std;
-const int INF = 1000000;
-const int MAX_N = 101;
-
-vector<int> ciclo_inicial = {0, 50, 100};
-
-std::vector<std::vector<int>> matriz_arquivo() {
-    std::ifstream arquivo("entrada.txt");
-    std::vector<std::vector<int>> matriz;
-    std::string linha;
-
-    while (std::getline(arquivo, linha)) {
-        std::istringstream linha_stream(linha);
-        int num;
-        std::vector<int> linha_matriz;
-
-        while (linha_stream >> num) {
-            linha_matriz.push_back(num);
-        }
-
-        matriz.push_back(linha_matriz);
-    }
-
-    return matriz;
-}
-
-vector< vector<int>> matriz = matriz_arquivo();
-
-vector<pair<int, int>> pega_pares(vector<int> lista){
-    vector<pair<int, int>> pares;
-    for (int i = 0; i < lista.size() - 1; i++) {
-        pares.push_back(make_pair(lista[i], lista[i + 1]));
-    }
-    pares.push_back(make_pair(lista[lista.size() - 1], lista[0]));
+    Truck new_truck;
+    caminhoes.push_back(new_truck);
+    int nCaminhoes = 0;
+    caminhoes[0].rota.push_back(0);
+    caminhoes[0].rota.push_back((inst.tamanho_instancia - 1) / 2);
+    caminhoes[0].rota.push_back(inst.tamanho_instancia - 1);
     
-    return pares;
-}
+    caminhoes[0].rota = mais_proximo(caminhoes[0].rota, MA, inst);
 
-int custo_total(const vector<int> &ciclo) {
-    int custo = 0;
-    vector<pair<int, int>>pares = pega_pares(ciclo);
-    for (int i = 0; i < pares.size() - 1; i++)
+    for (int i = 0; i < caminhoes[0].rota.size(); i++)
     {
-        int a = pares[i].first;
-        int b = pares[i].second;
-        custo = matriz[a][b] + custo;
-        cout << "custo = +" << matriz[a][b] << " - " << custo << endl;
-    }
-    cout << endl;
-
-    return custo;
-}
-
-vector<int> mais_proximo(vector<int> ciclo_inicial) {
-
-    while (ciclo_inicial.size() < MAX_N) {
-        int distancia_vertice = INF;
-        int custo = INF;
-        int vertice = -1;
-
-        for (int linha = 0; linha < MAX_N; linha++) {
-            if (find(ciclo_inicial.begin(), ciclo_inicial.end(), linha) == ciclo_inicial.end()) {
-                for (int coluna = 0; coluna < MAX_N; coluna++) {
-                    if (find(ciclo_inicial.begin(), ciclo_inicial.end(), coluna) != ciclo_inicial.end()) {
-                        if (matriz[linha][coluna] < distancia_vertice) {
-                            distancia_vertice = matriz[linha][coluna];
-                            vertice = linha;
-                        }
-                    }
-                }
-            }
-        }
-
-        cout << "Vertice mais distante: " << vertice << endl;
-
-        vector<pair<int, int>> pares = pega_pares(ciclo_inicial);
-        vector<int> novo_ciclo = {};
-
-        for (pair<int, int> aresta : pares) {
-            int novo_custo = matriz[vertice][aresta.first] + matriz[vertice][aresta.second] - matriz[aresta.first][aresta.second];
-            if (novo_custo < custo) {
-                novo_ciclo = ciclo_inicial;
-                custo = novo_custo;
-                auto it = find(novo_ciclo.begin(), novo_ciclo.end(), aresta.first);
-                novo_ciclo.insert((novo_ciclo.begin() + int(it - novo_ciclo.begin() + 1)), vertice);
-            }
-            
-        }
-        
-        ciclo_inicial = vector<int>(novo_ciclo);
-
-
+        cout << caminhoes[0].rota[i] << " ";
     }
 
-    ciclo_inicial.push_back(0);
+    // while(true){
 
-    for (int i = 0; i < ciclo_inicial.size(); i++)
-    {
-        cout << ciclo_inicial[i] << " ";
-    }
-    cout << endl;
-    
+    //     if (verificaRestricao(totalPontos, inst, caminhoes[nCaminhoes])){
 
-    return ciclo_inicial;
-
-}
-
-int main() {
-
-    // for (int i = 0; i < MAX_N; i++)
-    // {
-    //     for (int j = 0; j < MAX_N; j++)
-    //     {
-    //         cout << matriz[i][j] << " ";
+    //         continue;
     //     }
-    //     cout << endl;
+    //     else{
+    //         nCaminhoes++;
+    //         caminhoes.push_back(new_truck);
+    //     }
     // }
-    
-    ciclo_inicial = mais_proximo(ciclo_inicial);
-
-    cout << endl;
-
-    cout << custo_total(ciclo_inicial) << endl;
-    
-    return 0;
 }
-
 
 #endif
