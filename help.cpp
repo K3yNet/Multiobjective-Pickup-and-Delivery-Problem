@@ -131,3 +131,35 @@ int main() {
     
     return 0;
 }
+
+int partition(Pontos *coletas, int low, int high)
+{
+    Pontos pivot = coletas[high]; // pivot
+    int i= (low - 1); // Index of smaller element and indicates
+                 // the right position of pivot found so far
+ 
+    for (int j = low; j <= high - 1; j++) {
+        // If current element is smaller than the pivot
+        if (coletas[j].tempoAbertura < pivot.tempoAbertura) {
+            i++; // increment index of smaller element
+            swap(coletas[i], coletas[j]);
+        }
+    }
+    swap(coletas[i + 1], coletas[high]);
+    return (i + 1);
+}
+void quickSort(Pontos *coletas, int low, int high)
+{
+    if (low < high) {
+        /* pi is partitioning index, arr[p] is now
+        at right place */
+        int pi = partition(coletas, low, high);
+ 
+        // Separately sort elements before
+        // partition and after partition
+        quickSort(coletas, low, pi - 1);
+        quickSort(coletas, pi + 1, high);
+    }
+}
+
+
