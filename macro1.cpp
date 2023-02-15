@@ -10,6 +10,7 @@ Rafael Brunini : 202120488
 #include <cstring>
 #include <time.h>
 #include <unistd.h>
+#include <stdlib.h>
 #include <cstdlib>
 #include "funcoes.h"
 
@@ -19,19 +20,24 @@ int main(){
 
     Truck caminhao;
 
-    string posicaoAtualArquivo = "nyc-n200-3.txt";
+    string posicaoAtualArquivo = "poa-n100-6.txt";
 
     Instancia instancia;
 
     LerInstancia(posicaoAtualArquivo,instancia);
 
+
     Pontos *totalPontos = new Pontos[instancia.tamanho_instancia];
     int **MA = new int*[instancia.tamanho_instancia];
 
     leituraGrafo(posicaoAtualArquivo, instancia.tamanho_instancia, MA, totalPontos);
+    caminhao.rota.push_back(0);
+    caminhao.rota.push_back((instancia.tamanho_instancia - 1) / 2);
+    caminhao.rota.push_back(instancia.tamanho_instancia - 1);
     vector<Truck> caminhoes;
+    caminhoes.push_back(caminhao);
 
-    sequentialInsertion(totalPontos, instancia, caminhoes, MA);
+    mais_proximo(caminhoes[0].rota, MA, instancia, totalPontos, caminhoes);
 
     return 0;
 }
