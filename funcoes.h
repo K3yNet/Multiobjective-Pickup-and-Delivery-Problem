@@ -42,88 +42,6 @@ struct Truck{
      vector <int> rota;
 };
 
-vector<pair<int, int>> pega_pares(vector<int> lista){
-    vector<pair<int, int>> pares;
-    for (int i = 0; i < lista.size() - 1; i++) {
-        pares.push_back(make_pair(lista[i], lista[i + 1]));
-    }
-    pares.push_back(make_pair(lista[lista.size() - 1], lista[0]));
-    
-    return pares;
-}
-
-int custo_total(const vector<int> &ciclo, int** MA) {
-    int custo = 0;
-    vector<pair<int, int>>pares = pega_pares(ciclo);
-    for (int i = 0; i < pares.size() - 1; i++)
-    {
-        int a = pares[i].first;
-        int b = pares[i].second;
-        custo = MA[a][b] + custo;
-        cout << "custo = +" << MA[a][b] << " - " << custo << endl;
-    }
-    cout << endl;
-
-    return custo;
-}
-
-vector<int> mais_proximo(vector<int> ciclo_inicial, int** MA, Instancia inst) {
-    
-
-
-    while (ciclo_inicial.size() < inst.tamanho_instancia) {
-        int distancia_vertice = INF;
-        int custo = INF;
-        int vertice = -1;
-
-        for (int linha = 0; linha < inst.tamanho_instancia; linha++) {
-            if (find(ciclo_inicial.begin(), ciclo_inicial.end(), linha) == ciclo_inicial.end()) {
-                for (int coluna = 0; coluna < inst.tamanho_instancia; coluna++) {
-                    if (find(ciclo_inicial.begin(), ciclo_inicial.end(), coluna) != ciclo_inicial.end()) {
-                        if (MA[linha][coluna] < distancia_vertice) {
-                            distancia_vertice = MA[linha][coluna];
-                            vertice = linha;
-                        }
-                    }
-                }
-            }
-        }
-
-        
-
-        cout << "Vertice mais distante: " << vertice << endl;
-
-        vector<pair<int, int>> pares = pega_pares(ciclo_inicial);
-        vector<int> novo_ciclo = {};
-
-        for (pair<int, int> aresta : pares) {
-            int novo_custo = MA[vertice][aresta.first] + MA[vertice][aresta.second] - MA[aresta.first][aresta.second];
-            if (novo_custo < custo) {
-                novo_ciclo = ciclo_inicial;
-                custo = novo_custo;
-                auto it = find(novo_ciclo.begin(), novo_ciclo.end(), aresta.first);
-                novo_ciclo.insert((novo_ciclo.begin() + int(it - novo_ciclo.begin() + 1)), vertice);
-            }
-            
-        }
-        
-        ciclo_inicial = vector<int>(novo_ciclo);
-
-    }
-
-    ciclo_inicial.push_back(0);
-
-    for (int i = 0; i < ciclo_inicial.size(); i++)
-    {
-        cout << ciclo_inicial[i] << " ";
-    }
-    cout << endl;
-    
-
-    return ciclo_inicial;
-
-}
-
 void LerInstancia(string namefile, Instancia &instancia){
     char delimitador = ' ';
     ifstream entrada(namefile);
@@ -226,7 +144,7 @@ void leituraGrafo(string nameFile,int tamanhoGrafo,int **MA,Pontos *totalPontos)
     }
 }
 
-bool verificaRestricao(Pontos *totalPontos, Instancia inst,Truck &caminhao){
+bool verificaRestricao(Pontos *totalPontos, Instancia inst, Truck caminhao){
     
     int visitaEntrega, visitaColeta;
     Pontos coleta;
@@ -247,18 +165,20 @@ bool verificaRestricao(Pontos *totalPontos, Instancia inst,Truck &caminhao){
             
         }
     }
+    cout << "Prescedencia de coleta" << endl;
 
     //Janela de Tempo
-    for(int i = 0; i < int(caminhao.rota.size()); i++){
+    for(int i = 1; i < int(caminhao.rota.size()); i++){
         atual = totalPontos[caminhao.rota[i]];
-        if(caminhao.tempoGasto < atual.tempoAbertura)
+        if(caminhao.tempoGasto < atual.tempoAbertura){
             caminhao.tempoGasto += atual.tempoAbertura - caminhao.tempoGasto;
-
+            cout << "Tempo gasto: " << caminhao.tempoGasto << endl;
+        }
         else if(caminhao.tempoGasto > atual.tempoLimite)
             return false;
-
-            
     }
+    cout << "Janela de tempo" << endl;
+
     // Obrigatoriedade e Exclusividade de visita
     for(int i = 0; i < int(caminhao.rota.size()); i++){
         visitaEntrega = 0;
@@ -281,23 +201,132 @@ bool verificaRestricao(Pontos *totalPontos, Instancia inst,Truck &caminhao){
         }
         if(visitaColeta > 1 or visitaEntrega > 1)
             return false;
-
-
     }
+    cout << "Exclusividade de visita" << endl;
 
-    //Verifica inicio e fim e se não estoura o tempo de roterização
+    // Verifica inicio e fim e se não estoura o tempo de roterização
     if(caminhao.rota[0] != 0 or caminhao.rota[caminhao.rota.size()-1] != 0 or caminhao.tempoGasto > inst.roterizacao)
         return false;
+    cout << "Inicio e fim" << endl;
         
     //Capacidade do veiculo
     if(caminhao.ocupacao > inst.capacidade_veiculo)
         return false;
-
+    cout << "Capacidade" << endl;
 
     return true; // caso passe por todas as restrições retorna verdadeiro
 }
 
-int sequentialInsertion(Pontos *totalPontos, Instancia inst, vector <Truck> &caminhoes, int** MA){
+vector<pair<int, int>> pega_pares(vector<int> lista){
+    vector<pair<int, int>> pares;
+    for (int i = 0; i < lista.size() - 1; i++) {
+        pares.push_back(make_pair(lista[i], lista[i + 1]));
+    }
+    pares.push_back(make_pair(lista[lista.size() - 1], lista[0]));
+    
+    return pares;
+}
+
+int custo_total(const vector<int> &ciclo, int** MA) {
+    int custo = 0;
+    vector<pair<int, int>>pares = pega_pares(ciclo);
+    for (int i = 0; i < pares.size() - 1; i++)
+    {
+        int a = pares[i].first;
+        int b = pares[i].second;
+        custo = MA[a][b] + custo;
+        cout << "custo = +" << MA[a][b] << " - " << custo << endl;
+    }
+    cout << endl;
+
+    return custo;
+}
+
+vector<int> mais_proximo(vector<int> ciclo_inicial, int** MA, Instancia inst, Pontos *totalPontos, vector<Truck> caminhoes) {
+    // inst.tamanho_instancia
+    bool chave = true;
+    while (ciclo_inicial.size() < inst.tamanho_instancia) {
+        int distancia_vertice = INF;
+        int custo = INF;
+        int vertice = -1;
+
+        for (int linha = 0; linha < (inst.tamanho_instancia - 1) / 2; linha++) {
+            if (find(ciclo_inicial.begin(), ciclo_inicial.end(), linha) == ciclo_inicial.end()) {
+                for (int coluna = 0; coluna < inst.tamanho_instancia; coluna++) {
+                    if (find(ciclo_inicial.begin(), ciclo_inicial.end(), coluna) != ciclo_inicial.end()) {
+                        if (MA[linha][coluna] < distancia_vertice) {
+                            distancia_vertice = MA[linha][coluna];
+                            vertice = linha;
+                        }
+                    }
+                }
+            }
+        }
+
+        cout << "Vertice mais distante: " << vertice << endl;
+
+        vector<pair<int, int>> pares = pega_pares(ciclo_inicial);
+
+        for (pair<int, int> aresta : pares) {
+            int novo_custo = MA[vertice][aresta.first] + MA[vertice][aresta.second] - MA[aresta.first][aresta.second];
+            if (novo_custo < custo) {
+                caminhoes[0].rota = ciclo_inicial;
+                if (chave){
+                    caminhoes[0].rota.push_back(0);
+                    chave = false;
+                }
+                
+                custo = novo_custo;
+                
+                auto it = find(caminhoes[0].rota.begin(), caminhoes[0].rota.end(), aresta.first);
+                caminhoes[0].rota.insert((caminhoes[0].rota.begin() + int(it - caminhoes[0].rota.begin() + 1)), vertice);
+                caminhoes[0].ocupacao += totalPontos[vertice].demanda;
+                caminhoes[0].tempoGasto += totalPontos[vertice].duracaoServico;
+                if (vertice < (inst.tamanho_instancia - 1) / 2){
+                    cout << "Verice de coleta" << endl;
+                    it = find(caminhoes[0].rota.begin(), caminhoes[0].rota.end(), vertice);
+                    caminhoes[0].rota.insert((caminhoes[0].rota.begin() + int(it - caminhoes[0].rota.begin() + 1)), totalPontos[vertice].pEntrega);
+                    caminhoes[0].ocupacao += totalPontos[totalPontos[vertice].pEntrega].demanda;
+                    caminhoes[0].tempoGasto += totalPontos[totalPontos[vertice].pEntrega].duracaoServico;
+                    for (int i = 0; i < caminhoes[0].rota.size(); i++)
+                        cout << caminhoes[0].rota[i] << " ";
+                    cout << endl;
+                }
+                else{
+                    cout << "Verice de entrega" << endl;
+                    it = find(caminhoes[0].rota.begin(), caminhoes[0].rota.end(), vertice);
+                    caminhoes[0].rota.insert((caminhoes[0].rota.begin() + int(it - caminhoes[0].rota.begin())), totalPontos[vertice].pColeta);
+                    caminhoes[0].ocupacao += totalPontos[totalPontos[vertice].pColeta].demanda;
+                    caminhoes[0].tempoGasto += totalPontos[totalPontos[vertice].pColeta].duracaoServico;
+                    for (int i = 0; i < caminhoes[0].rota.size(); i++)
+                        cout << caminhoes[0].rota[i] << " ";
+                    cout << endl;
+                }   
+            }
+        }
+        
+        ciclo_inicial = vector<int>(caminhoes[0].rota);
+        caminhoes[0].tempoGasto += custo_total(ciclo_inicial, MA);
+        cout << caminhoes[0].tempoGasto << endl;
+        if(verificaRestricao(totalPontos, inst, caminhoes[0]))
+            continue;
+        else{
+            cout << "Travou" << endl;
+            return ciclo_inicial;
+        }
+    }
+
+    for (int i = 0; i < ciclo_inicial.size(); i++)
+    {
+        cout << ciclo_inicial[i] << " ";
+    }
+    
+
+    return ciclo_inicial;
+
+}
+
+void sequentialInsertion(Pontos *totalPontos, Instancia inst, vector <Truck> &caminhoes, int** MA){
     
     Truck new_truck;
     caminhoes.push_back(new_truck);
@@ -305,18 +334,9 @@ int sequentialInsertion(Pontos *totalPontos, Instancia inst, vector <Truck> &cam
     caminhoes[0].rota.push_back(0);
     caminhoes[0].rota.push_back((inst.tamanho_instancia - 1) / 2);
     caminhoes[0].rota.push_back(inst.tamanho_instancia - 1);
-    
-    caminhoes[0].rota = mais_proximo(caminhoes[0].rota, MA, inst);
-
-    for (int i = 0; i < caminhoes[0].rota.size(); i++)
-    {
-        cout << caminhoes[0].rota[i] << " ";
-    }
 
     // while(true){
-
     //     if (verificaRestricao(totalPontos, inst, caminhoes[nCaminhoes])){
-
     //         continue;
     //     }
     //     else{
