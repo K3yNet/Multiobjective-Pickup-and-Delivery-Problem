@@ -88,15 +88,15 @@ int main(){
         caminhoes.push_back(caminhao);
     }
 
-    int custo = INF;
+    // int custo = INF;
 
-    for (int i = 0; i < caminhoes.size(); i++){
-        if (verificaRestricao(totalPontos, instancia, caminhoes[i].rota.insert(caminhoes[i].rota.begin + 1, caminhoes[i + 1].rota))){
-            caminhoes[i].rota.insert(caminhoes[i].rota.begin + 1, caminhoes[i + 1].rota);
-            caminhoes[i + 1]
-        }
+    // for (int i = 0; i < caminhoes.size(); i++){
+    //     if (verificaRestricao(totalPontos, instancia, caminhoes[i].rota.insert(caminhoes[i].rota.begin + 1, caminhoes[i + 1].rota))){
+    //         caminhoes[i].rota.insert(caminhoes[i].rota.begin + 1, caminhoes[i + 1].rota);
+    //         caminhoes[i + 1]
+    //     }
         
-    }
+    // }
     
 
     cout << "Total de caminhoes: " << caminhoes.size() << endl;
